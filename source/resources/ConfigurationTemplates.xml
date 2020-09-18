@@ -1,0 +1,109 @@
+<TemplateDefinitions>
+
+	<Components>
+
+		<Plugin>
+			<attr name="name" required="yes" default="ReidentifierDB"/>
+			<attr name="class" required="yes" default="com.fourd.ReidentifierDB" editable="no"/>
+			<attr name="id" required="yes" default="ReidentifierDBID"/>
+			<attr name="root" required="yes" default="roots/ReidentifierDB"/>
+		</Plugin>
+
+		<Processor>
+			<attr name="name" required="yes" default="ReidentifierDBUpdater"/>
+			<attr name="class" required="yes" default="com.fourd.ReidentifierDBUpdater" editable="no"/>
+			<attr name="root" required="yes" default="roots/ReidentifierDBUpdater"/>
+			<attr name="id" required="yes" default="ReidentifierDBUpdater"/>
+			<attr name="cacheID" required="yes" default="ObjectCache">
+				<helptext>
+					The ID of an ObjectCache stage from which to obtain a DicomObject for
+					comparison with the current DicomObject.
+				</helptext>
+			</attr>
+			<attr name="reidentifierDBID" required="yes" default="ReidentifierDBID">
+				<helptext>
+					The ID of a ReidentifierDB plugin in which to enter DicomObjects.
+				</helptext>
+			</attr>
+		</Processor>
+
+		<Processor>
+			<attr name="name" required="yes" default="Reidentifier"/>
+			<attr name="class" required="yes" default="com.fourd.Reidentifier" editable="no"/>
+			<attr name="root" required="yes" default="roots/Reidentifier"/>
+			<attr name="id" required="yes" default="Reidentifier"/>
+			<attr name="reidentifierDBID" required="yes" default="ReidentifierDBID">
+				<helptext>
+					The ID of the ReidentifierDB plugin to use to reidentify DicomObjects.
+				</helptext>
+			</attr>
+		</Processor>
+
+	</Components>
+
+	<StandardPipelines>
+
+		<Pipeline name="FourDExport" root="FourD/export">
+			<DicomImportService
+				name="DicomImportService"
+				class="org.rsna.ctp.stdstages.DicomImportService"
+				root="roots/DicomImportService"
+				port="8104"
+				quarantine="quarantines/DicomImportService-IA" />
+			<ObjectCache
+				class="org.rsna.ctp.stdstages.ObjectCache"
+				id="ObjectCache"
+				name="ObjectCache"
+				root="roots/ObjectCache"/>
+			<DicomAnonymizer
+				class="org.rsna.ctp.stdstages.DicomAnonymizer"
+				name="DicomAnonymizer"
+				root="roots/DicomAnonymizer-IA"
+				script="scripts/DicomAnonymizer-IA.script"/>
+			<ReidentifierDBUpdater
+				cacheID="ObjectCache"
+				class="com.fourd.ReidentifierDBUpdater"
+				id="ReidentifierDBUpdater"
+				name="ReidentifierDBUpdater"
+				reidentifierDBID="ReidentifierDBID"
+				root="roots/ReidentifierDBUpdater"/>
+			<DicomExportService
+				class="org.rsna.ctp.stdstages.DicomExportService"
+				name="DicomExportService"
+				quarantine="quarantines/DicomExportService"
+				root="roots/DicomExportService"
+				url="dicom://FOURD:CTP@192.168.0.225:8104"/>
+		</Pipeline>
+		
+		<Pipeline name="FourDImport" root="FourD/import">
+			<DicomImportService
+				class="org.rsna.ctp.stdstages.DicomImportService"
+				logConnections="no"
+				name="DicomImportService"
+				port="8104"
+				quarantine="quarantines/DicomImportService"
+				root="roots/DicomImportService"/>
+			<Reidentifier
+				class="com.fourd.Reidentifier"
+				id="Reidentifier"
+				name="Reidentifier"
+				reidentifierDBID="ReidentifierDBID"
+				root="roots/Reidentifier"/>
+			<DirectoryStorageService
+				acceptDuplicates="yes"
+				class="org.rsna.ctp.stdstages.DirectoryStorageService"
+				defaultString=""
+				logDuplicates="no"
+				name="DirectoryStorageService2"
+				quarantine="quarantines/DirectoryStorageService"
+				returnStoredFile="no"
+				root="roots/DirectoryStorageService2"
+				setStandardExtensions="no"
+				structure="{PatientID}"
+				whitespaceReplacement="_"/>
+		</Pipeline>
+		
+	</StandardPipelines>
+	
+</TemplateDefinitions>
+
