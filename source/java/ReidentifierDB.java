@@ -117,7 +117,9 @@ public class ReidentifierDB extends AbstractPlugin {
 		String siuid = table.get(anonStudyInstanceUID);
 		ds.putXX(patientIDTag, VRs.valueOf("LO"), ptid);
 		ds.putXX(patientNameTag, VRs.valueOf("PN"), ptname);
-		ds.putXX(studyInstanceUIDTag, VRs.valueOf("UI"), siuid);
+		if (siuid != null) {
+			ds.putXX(studyInstanceUIDTag, VRs.valueOf("UI"), siuid);
+		}
 		
 		//Replace the original file with the modified dataset
 		File dir = dobFile.getParentFile();
