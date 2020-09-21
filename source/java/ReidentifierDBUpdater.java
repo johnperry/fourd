@@ -82,7 +82,7 @@ public class ReidentifierDBUpdater extends AbstractPipelineStage implements Proc
 				if ( (fob instanceof DicomObject) ) cachedObject = (DicomObject)fob;
 			}
 
-			if (cachedObject != null) db.insert(dob.getPatientID()/*anon*/, cachedObject/*phi*/);
+			if (cachedObject != null) db.insert(dob/*anon*/, cachedObject/*phi*/);
 		}
 
 		lastFileOut = new File(fileObject.getFile().getAbsolutePath());

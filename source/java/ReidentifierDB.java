@@ -25,6 +25,7 @@ public class ReidentifierDB extends AbstractPlugin {
 	
 	static int patientIDTag = DicomObject.getElementTag("PatientID");
 	static int patientNameTag = DicomObject.getElementTag("PatientName");
+	static int studyInstanceUIDTag = DicomObject.getElementTag("StudyInstanceUID");
 	
 	RecordManager recman;
 	HTree db;
@@ -68,17 +69,21 @@ public class ReidentifierDB extends AbstractPlugin {
 	 * @param anonPatientID the anonymized value of the PatientID.
 	 * @param phiDicomObject the original DicomObject, containing the values to be used for reidentification.
  	 */
-	public void insert(String anonPatientID, DicomObject phiDicomObject) {
+	public void insert(DicomObject anonDicomObject, DicomObject phiDicomObject) {
 		Hashtable<String,String> table = new Hashtable<String,String>();
-		String patientID = phiDicomObject.getElementValue(patientIDTag);
-		String patientName = phiDicomObject.getElementValue(patientNameTag);
+		String anonPatientID = anonDicomObject.getElementValue(patientIDTag);
+		String phiPatientID = phiDicomObject.getElementValue(patientIDTag);
+		String phiPatientName = phiDicomObject.getElementValue(patientNameTag);
+		String anonStudyInstanceUID = anonDicomObject.getElementValue(studyInstanceUIDTag);
+		String phiStudyInstanceUID = phiDicomObject.getElementValue(studyInstanceUIDTag);
 		try {
-			table.put("PatientID", patientID);
-			table.put("PatientName", patientName);
+			table.put("PatientID", phiPatientID);
+			table.put("PatientName", phiPatientName);
+			table.put(anonStudyInstanceUID, phiStudyInstanceUID);
 			db.put(anonPatientID, table);
 		}
 		catch (Exception ex) {
-			logger.warn("Enable to insert "+patientID+"/"+anonPatientID+" into the "+id+" database.");
+			logger.warn("Enable to insert "+anonPatientID+"/"+anonPatientID+" into the "+id+" database.");
 		}
 	}
 	
@@ -103,13 +108,16 @@ public class ReidentifierDB extends AbstractPlugin {
 		//Parse the object and leave the file open so we can use the saveAs method
 		File dobFile = dob.getFile();
 		DicomObject xdob = new DicomObject(dobFile, true);
+		String anonStudyInstanceUID = dob.getElementValue(studyInstanceUIDTag);
 		
 		//Get the dataset and modify it
 		Dataset ds = xdob.getDataset();
 		String ptid = table.get("PatientID");
 		String ptname = table.get("PatientName");
+		String siuid = table.get(anonStudyInstanceUID);
 		ds.putXX(patientIDTag, VRs.valueOf("LO"), ptid);
 		ds.putXX(patientNameTag, VRs.valueOf("PN"), ptname);
+		ds.putXX(studyInstanceUIDTag, VRs.valueOf("UI"), siuid);
 		
 		//Replace the original file with the modified dataset
 		File dir = dobFile.getParentFile();
